@@ -2,7 +2,14 @@
 ### CS186, UC Berkeley, Fall 2012
 ### Points: [10% of your final grade](https://sites.google.com/a/cs.berkeley.edu/cs186-fa2012/additional-course-information)
 ### Note: *This homework is to be done in pairs!*
-### Due: Monday, 10/1, 11:59 PM (You have 4 slip days for all CS186 projects. Use them wisely)
+### Due: Wednesday, 10/3, 11:59 PM (You have 4 slip days for all CS186 projects. Use them wisely)
+
+##Edits
+*  9/24 12:12pm - Extended the deadline to 10/3.
+*  9/22  9:05pm - Added documentation on how to run a [script to generate fake data](https://github.com/cs186-fa12/fa12/blob/master/hw2/README.md#generating-sample-data).
+*  9/19 10:29pm - Added a clarification on the [relationship between tables and models](https://github.com/cs186-fa12/fa12/blob/master/hw2/RailsBackground.md#relationship-between-database-tables-and-models), and a section on how [CS186 topics related to Rails](https://github.com/cs186-fa12/fa12/blob/master/hw2/RailsBackground.md#how-does-this-relate-to-cs186-concepts), to the Rails Background page.
+*  9/17  6:54pm - Clarify what a "post" is.
+*  9/16  8:10pm - Added clarification for what the keys and values of the hashes should be, to the end of Part II.
 
 ##Table Of Contents
 *  [Important](https://github.com/cs186-fa12/fa12/blob/master/hw2/README.md#important)
@@ -20,13 +27,13 @@
 ##IMPORTANT!
 *  Use the virtual machine for this project. Details are in the [Development Environment](https://github.com/cs186-fa12/fa12/blob/master/hw2/README.md#development-environment) section.
 *  Read our [Rails Background](https://github.com/cs186-fa12/fa12/blob/master/hw2/README.md#rails-background). It discusses all the major concepts needed for this project.
-*  The official [Rails Guide](http://guides.rubyonrails.org/) is also your friend. It my best friend last week.
+*  The official [Rails Guide](http://guides.rubyonrails.org/) is also your friend. It was my best friend last week.
 
 ##Description
 You have just been hired by a hot new start-up, loCALee! Congratulations!
 
 loCALee hired you because they want you to head their development team, and need your expertise in database schema design.
-You are to implement their backend service implementation before their release on October 1, 2012.
+You are to implement their backend service implementation before their release on October 3, 2012.
 loCALee is a Twitter variant, but it is heavily focused on locations (loCALee ~ locally).
 All users post updates to locations, and all users follow locations, not other users.
 For this assignment, you will implement this functionality to open up the service to the public soon!
@@ -146,6 +153,7 @@ These are the specifications for the loCALee project:
    *  Locations must also have GPS coordinates (latitude and longitude)
    *  The locations page show all the posts to that location, with the latest post first
 *  Users can create posts to locations
+   *  A post is a piece of text the user creates for the particular location
    *  Posts are always associated with a single location
    *  Posts are always associated with the user who posted it
 *  Users can follow or unfollow locations
@@ -204,6 +212,10 @@ The methods you will need to implement are:
    * Returns all the locations
 
 More detailed specifications are in the comments for each method.
+In the comments, most of the return types will be array of hashes, or hashes.
+The comments specify what the keys and values of the hashes should be.
+For example, if it says a hash should include ":name - the name of the location", it means the key is `:name` and the value is the value of the name.
+Therefore `h[:name]` will be the name of the location.
 
 ####Running SQL Queries Directly on the Database
 
@@ -231,6 +243,20 @@ You can run those methods in the rails console:
 ```
 
 Use the console to make sure your implementation/schema prevents the database from being corrupted.
+
+####Generating Sample Data
+We have provide you with a simple script which generates data by using the methods in the file `app/controllers/app_query.rb`.
+It should be run with an empty database, so you will have to drop the database (erases all data!) before running this script.
+Here is how you can generate the data:
+
+```
+> rake db:drop # drop all the tables from the database
+> rake db:migrate # re-create the tables/schema from your migrations
+> rake generate_fake_data # our script to generate data for your app
+```
+
+The script generates 15 users and 15 loations, where each user has the name/email/password `userX` (where X is 1 to 15), so you can login with a generated user.
+Hopefully, this script will be helpful in testing your implementation.
 
 ##Part III: Analytic Queries (SQL Queries)
 In addition to the interactive web application backend implementation, you also need to write some analytics queries in order to see how the service is being used.
