@@ -1,9 +1,9 @@
 class CreateLocations < ActiveRecord::Migration
   def change
     create_table :locations do |t|
-      t.string :location_name
-      t.string :gps_latitude
-      t.string :gps_longitude
+      t.string :loc_name
+      t.string :lat
+      t.string :lng
 
       t.timestamps
     end
