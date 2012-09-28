@@ -1,39 +1,47 @@
-OVERVIEW
-
 //***************************//
 //**********Users************//
 //***************************//
 PRIMARY KEY(id)
 
+:id:
+-INTEGER
+-AUTO_GEN
+-AUTO_POP
+
 :name:
+-STRING
 -REQUIRED
 
 :email:
+-STRING
 -REQUIRED
 -UNIQUE
 
 :password:
+-STRING
 -REQUIRED
 -LENGTH >= 5
 
 :timestamps:
--AUTO_POP
 -DATETIME
+-AUTO_POP
+
 
 //***************************//
 //*********Locations*********//
 //***************************//
 PRIMARY KEY(location_id)
 
-:location_id:
+:id:
 -INTEGER
+-AUTO_GEN
 -AUTO_POP
 
 :location_name:
 -STRING
 -REQUIRED
 
-:gps_lattitude:
+:gps_latitude:
 -STRING
 -REQUIRED
 -REQUIREMENTS: http://astro.unl.edu/naap/motion1/tc_units.html
@@ -48,8 +56,9 @@ PRIMARY KEY(location_id)
 //***************************//
 PRIMARY KEY(post_id)
 
-:post_id:
+:id:
 -INTEGER
+-AUTO_GEN
 -AUTO_POP
 
 :location_id:
@@ -57,13 +66,13 @@ PRIMARY KEY(post_id)
 -REQUIRED
 -FOREIGN_KEY
 
-:user_id: (called 'id' in user model)
+:user_id:
 -INTEGER
 -REQUIRED
 -FOREIGN_KEY
 
 :text:
--STRING
+-TEXT
 -REQUIRED
 
 :timestamps:
@@ -71,7 +80,7 @@ PRIMARY KEY(post_id)
 -AUTO_POP
 
 //***************************//
-//***User_Follows_Location***//
+//**********Follows**********//
 //***************************//
 PRIMARY KEY (user_id, location_id)
 
