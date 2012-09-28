@@ -9,8 +9,6 @@ class Location < ActiveRecord::Base
   validates :lng, :presence => true
 
   ### Associations
-  has_many :follows
-  has_many :users, :through => follows
   has_many :posts
   
 

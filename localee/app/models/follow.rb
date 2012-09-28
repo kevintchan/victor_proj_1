@@ -3,14 +3,12 @@ class Follow < ActiveRecord::Base
 
   ### Associations 
   belongs_to :user
-  belongs_to :location
 
   ### Validations
 
   # best implementation of composite primary key
-  validates_uniqueness_of :user, :scope => :location
+  validates_uniqueness_of :location, :scope => :user
 
   validates_associated :user
-  validates_associated :location
 
 end
