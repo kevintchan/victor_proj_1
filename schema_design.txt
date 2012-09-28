@@ -1,0 +1,86 @@
+OVERVIEW
+
+//***************************//
+//**********Users************//
+//***************************//
+PRIMARY KEY(id)
+
+:name:
+-REQUIRED
+
+:email:
+-REQUIRED
+-UNIQUE
+
+:password:
+-REQUIRED
+-LENGTH >= 5
+
+:timestamps:
+-AUTO_POP
+-DATETIME
+
+//***************************//
+//*********Locations*********//
+//***************************//
+PRIMARY KEY(location_id)
+
+:location_id:
+-INTEGER
+-AUTO_POP
+
+:location_name:
+-STRING
+-REQUIRED
+
+:gps_lattitude:
+-STRING
+-REQUIRED
+-REQUIREMENTS: http://astro.unl.edu/naap/motion1/tc_units.html
+
+:gps_longitude:
+-STRING
+-REQUIRED
+-REQUIREMENTS: http://astro.unl.edu/naap/motion1/tc_units.html
+
+//***************************//
+//***********Posts***********//
+//***************************//
+PRIMARY KEY(post_id)
+
+:post_id:
+-INTEGER
+-AUTO_POP
+
+:location_id:
+-INTEGER
+-REQUIRED
+-FOREIGN_KEY
+
+:user_id: (called 'id' in user model)
+-INTEGER
+-REQUIRED
+-FOREIGN_KEY
+
+:text:
+-STRING
+-REQUIRED
+
+:timestamps:
+-DATETIME
+-AUTO_POP
+
+//***************************//
+//***User_Follows_Location***//
+//***************************//
+PRIMARY KEY (user_id, location_id)
+
+:user_id: (called 'id' in user model)
+-INTEGER
+-REQUIRED
+-FOREIGN_KEY
+
+:location_id:
+-INTEGER
+-REQUIRED
+-FOREIGN_KEY
