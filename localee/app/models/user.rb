@@ -17,9 +17,9 @@ class User < ActiveRecord::Base
   ############################################
 
   ### Associations
-  has_many :follows
-  has_many :locations, :through => follows
-  has_many :posts
+  #has_many :follows
+  #has_many :locations, :through => follows
+  #has_many :posts
 
   def to_hash
     {
