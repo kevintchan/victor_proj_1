@@ -10,7 +10,7 @@ class User < ActiveRecord::Base
   ### Validations
   validates :name, :presence => true
   validates :email, :presence => true, :uniqueness => true
-  validates :password, :presence => true, :on => :create, :length => {:minimum => 5}
+  validates :password_digest, :presence => true, :on => :create, :length => {:minimum => 5}
 
   ############################################
   #  TODO: you may optionally add code here  #
