@@ -18,7 +18,6 @@ class User < ActiveRecord::Base
 
   ### Associations
   has_many :follows
-  has_many :posts
 
   def to_hash
     {
