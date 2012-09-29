@@ -28,7 +28,13 @@ class AppQuery
   #     * :longitude - the longitude
   # Output: None
   def get_following_locations(user_id)
-    @following_locations = []
+    query = "SELECT L.id AS id, L.name AS name,
+                    L.latitude AS latitude,
+                    L.longitude AS longitude
+             FROM locations L, follows F
+             WHERE L.id = F.location_id AND F.user_id = #{user_id}"
+
+    @following_locations = ActiveRecord::Base.connection.execute(query)
   end
 
   # Purpose: Show the information and all posts for a given location
@@ -54,8 +60,20 @@ class AppQuery
   #         * :longitude - the longitude
   # Output: None
   def get_posts_for_location(location_id)
-    @location = {}
-    @posts = []
+    loc_query = "SELECT L.id AS id, L.name AS name,
+                        L.latitude AS latitude,
+                        L.longitude AS longitude
+                 FROM locations L
+                 WHERE L.id = #{location_id}"
+    @location = ActiveRecord::Base.connection.execute(query)[0]
+    post_query = "SELECT P.user_id as author_id, U.name as author,
+                         P.text as text, P.created_at as create_at
+                  FROM posts P, users U
+                  WHERE P.user_id = U.id AND P.location_id = #{location_id}"
+    results = ActiveRecord::Base.connection.execute(post_query)
+    results.each {|post| post.merge(:location => @location)}
+
+    @posts = results
   end
 
   # Purpose: Show the current user's stream of posts from all the locations the user follows
