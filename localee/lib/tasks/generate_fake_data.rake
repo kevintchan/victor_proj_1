@@ -33,6 +33,8 @@ task :generate_fake_data => :environment do
     l[:id]
   end
 
+  print location_ids
+  
   # add some follows
   user_ids.each do |u|
     num_follows = rng.rand(more_follows)

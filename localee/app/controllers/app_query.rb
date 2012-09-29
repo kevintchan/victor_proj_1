@@ -28,13 +28,22 @@ class AppQuery
   #     * :longitude - the longitude
   # Output: None
   def get_following_locations(user_id)
+    @following_locations = []
+
     query = "SELECT L.id AS id, L.name AS name,
                     L.latitude AS latitude,
                     L.longitude AS longitude
              FROM locations L, follows F
              WHERE L.id = F.location_id AND F.user_id = #{user_id}"
+    results = ActiveRecord::Base.connection.execute(query)
 
-    @following_locations = ActiveRecord::Base.connection.execute(query)
+    results.each do |row|
+      @following_locations.push({:id => row["id"],
+                                 :name => row["name"],
+                                 :latitude => row["latitude"],
+                                 :longitude => row["longitude"]})
+    end
+
   end
 
   # Purpose: Show the information and all posts for a given location
@@ -94,7 +103,17 @@ class AppQuery
   #         * :longitude - the longitude
   # Output: None
   def get_stream_for_user(user_id)
-    @posts = []
+    final_posts = []
+
+    # @following_locations
+    get_following_locations(user_id)
+
+    @following_locations.each do |location|
+      get_posts_for_location(location[:id])
+      final_posts.merge(@posts)
+    end
+
+    @posts = final_posts
   end
 
   # Purpose: Retrieve the locations within a GPS bounding box
@@ -116,7 +135,15 @@ class AppQuery
   #     * :follows - true if the current user follows this location. false otherwise.
   # Output: None
   def get_nearby_locations(nelat, nelng, swlat, swlng, user_id)
-    @locations = []
+    near_query = "SELECT L.id AS id, L.name as name,
+                         L.latitude as latitude, L.longitude as longitude,
+                         CASE WHEN F.user_id = #{user_id} THEN true ELSE false
+                  FROM locations L, follows F
+                  WHERE F.location_id = L.id,
+                        L.latitude < nelast AND L.latitude > swlat AND
+                        L.longitude < nelng AND L.longitude > swlng"
+
+    @locations = ActiveRecord::Base.connection.execute(near_query)
   end
 
   # Purpose: Create a new location
@@ -132,7 +159,9 @@ class AppQuery
   # Assign: None
   # Output: true if the creation is successful, false otherwise
   def create_location(location_hash={})
-    false
+    new_loc = Location.new(location_hash)
+    save_successful = new_loc.save
+    return save_successful
   end
 
   # Purpose: The current user follows a location
@@ -145,6 +174,8 @@ class AppQuery
   #       we may call it multiple times to test your schema/models.
   #       Your schema/models/code should prevent corruption of the database.
   def follow_location(user_id, location_id)
+    new_follow = Follow.new(:user_id => user_id, :location_id => location_id)
+    new_follow.save
   end
 
   # Purpose: The current user unfollows a location
@@ -157,6 +188,9 @@ class AppQuery
   #       we may call it multiple times to test your schema/models.
   #       Your schema/models/code should prevent corruption of the database.
   def unfollow_location(user_id, location_id)
+    unfollow_query = "DELETE FROM follows F
+                      WHERE F.user_id = #{user_id} AND F.location_id = #{location_id}"
+    ActionRecord::Base.connection.execute(unfollow_query)
   end
 
   # Purpose: The current user creates a post to a given location
@@ -172,7 +206,12 @@ class AppQuery
   # Assign: None
   # Output: true if the creation is successful, false otherwise
   def create_post(user_id, post_hash={})
-    false
+    print post_hash
+    new_post = Post.new(:user_id=>user_id,
+                        :location_id=>post_hash[:location_id],
+                        :text=>post_hash[:text])
+    save_successful = new_post.save
+    return save_successful
   end
 
   # Purpose: Create a new user
@@ -191,7 +230,8 @@ class AppQuery
   # NOTE: This method is already implemented, but you are allowed to modify it if needed.
   def create_user(user_hash={})
     @user = User.new(user_hash)
-    @user.save
+    save_successful = @user.save
+    return save_successful
   end
 
   # Purpose: Get all the posts
@@ -211,7 +251,17 @@ class AppQuery
   #         * :longitude - the longitude
   # Output: None
   def get_all_posts
-    @posts = []
+    all_posts_query = "SELECT P.user_id as author_id,
+                              U.name as author,
+                              P.text as text,
+                              P.created_at as created_at,
+                              (SELECT L.id as id,
+                                      L.name as name,
+                                      L.latitude as latitude,
+                                      L.longitude as longitude) as location
+                        FROM posts P, users U, locations L
+                        WHERE P.user_id = U.id AND P.location_id = L.id"
+    @posts = ActiveRecord::Base.connection.execute(all_posts_query)
   end
 
   # Purpose: Get all the users
@@ -225,7 +275,9 @@ class AppQuery
   #     * :email - email of th user
   # Output: None
   def get_all_users
-    @users = []
+    all_users_query = "SELECT U.id as id, U.name as name, U.email as email
+                       FROM users U"
+    @users = ActiveRecord::Base.connection.execute(all_users_query)
   end
 
   # Purpose: Get all the locations
@@ -240,7 +292,19 @@ class AppQuery
   #     * :longitude - the longitude
   # Output: None
   def get_all_locations
+    all_locations_query = "SELECT L.id as id, L.name as name, L.latitude as latitude, L.longitude as longitude
+                           FROM locations L"
+    result = ActiveRecord::Base.connection.execute(all_locations_query)
     @locations = []
+
+    result.each do |row|
+      @locations.push({ :id => row[0],
+                        :name => row[1],
+                        :latitude => row[2],
+                        :longitude => row[3]})
+    end
+    return @locations
+
   end
 
   # Retrieve the top 5 users who created the most posts.

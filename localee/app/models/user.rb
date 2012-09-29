@@ -16,9 +16,6 @@ class User < ActiveRecord::Base
   #  TODO: you may optionally add code here  #
   ############################################
 
-  ### Associations
-  has_many :follows
-
   def to_hash
     {
       :id => self.id,
