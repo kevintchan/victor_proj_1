@@ -28,7 +28,7 @@ task :test_controller => :environment do
   # users we create, id => userhash
   users_in_mem = {}
 
-  # create users
+  # create 'num_users' users
   (1..num_users).each do |i|
     uname = "user" + i.to_s
     email = uname + "@roxsox.com"
@@ -43,8 +43,6 @@ task :test_controller => :environment do
 
     users_in_mem[aq.user[:id]]=(aq.user)
   end
-
-  print users_in_mem
 
   # locations we create, id => locationhash
   locations_in_mem = {}
@@ -61,10 +59,11 @@ task :test_controller => :environment do
       print "\n"
       exit 0
     end
-    locations_in_mem[aq.location[:id]] = aq.location
+    locations_in_mem[aq.new_location[:id]] = aq.new_location
   end
 
   ### test get_all_users ###
+  # test by :id field
   aq.get_all_users
   if (aq.users.length != num_users)
     print "get_all_users found " + aq.users.length.to_s +
@@ -73,16 +72,11 @@ task :test_controller => :environment do
     exit 0
   end
 
-  print aq.users
-
   user_ids = []
   aq.users.each do |user_from_db|
     user_id = user_from_db[:id]
-    user_from_mem = users_in_mem[user_id]
-    if (!user_from_db.diff(user_from_mem).empty?)
+    if (!users_in_mem.has_key?(user_id))
       print "user in memory differed from user in db for user id: " + user_id.to_s + "\n"
-      print "from memory: " + user_from_mem.to_s + "\n"
-      print "from db: " + user_from_db.to_s + "\n"
       exit 0
     end
     
@@ -93,6 +87,7 @@ task :test_controller => :environment do
 
 
   ### test get_all_locations ###
+  # test by :id field
   aq.get_all_locations
 
   if (aq.locations.length != num_locations)
@@ -105,12 +100,9 @@ task :test_controller => :environment do
   location_ids = []
   aq.locations.each do |location_from_db|
     location_id = location_from_db[:id]
-    location_from_mem = locations_in_mem[location_id]
-    if (!location_from_db.diff(location_from_mem).empty?)
+    if (!locations_in_mem.has_key?(location_id))
       print "location in memory differed from location in db for location id: " +
             location_id.to_s + "\n"
-      print "from memory: " + location_from_mem.to_s + "\n"
-      print "from db: " + location_from_db.to_s + "\n"
       exit 0
     end
 
@@ -126,10 +118,10 @@ task :test_controller => :environment do
     num_follows = rng.rand(more_follows)
     location_ids.sample(num_follows).each do |l|
       aq.follow_location(u, l)
-      if (!follow_in_mem.has_key?(u))
-        follow_in_menu[u] = Set.new
+      if (!follows_in_mem.has_key?(u))
+        follows_in_mem[u] = []
       end
-      follows_in_mem[u].add(l)
+      follows_in_mem[u].push(l)
     end
   end
 
@@ -151,16 +143,17 @@ task :test_controller => :environment do
       end
         
       post_counter += 1
-      posts_in_mem[aq.post[:id]] = aq.post
+      posts_in_mem[aq.new_post[:text]] = aq.new_post
 
-      if (!posts_by_location.has_key(lid))
+      if (!posts_by_location.has_key?(lid))
         posts_by_location[lid] = Set.new
       end
-      posts_by_location[lid].add(aq.post)
+      posts_by_location[lid].add(aq.new_post)
     end
   end
 
   ### test get_all_posts
+  ## by post text
   aq.get_all_posts
 
   if (aq.posts.length != posts_in_mem.length)
@@ -171,13 +164,10 @@ task :test_controller => :environment do
   end
 
   aq.posts.each do |post_from_db|
-    post_id = post_from_db[:id]
-    post_from_mem = posts_in_mem[post_id]
-    if (!post_from_db.diff(post_from_mem).empty?)
+    post_text = post_from_db[:text]
+    if (!posts_in_mem.has_key?(post_text))
       print "post in memory differed from post in db for post id: " +
-            post_id.to_s + "\n"
-      print "from memory: " + post_from_mem.to_s + "\n"
-      print "from db: " + post_from_db.to_s + "\n"
+            post_text.to_s + "\n"
       exit 0
     end
   end
@@ -185,10 +175,17 @@ task :test_controller => :environment do
   print "get_all_posts passed!\n"
 
   ### test get_following_locations ###
+  # by arrays of ids
+
   user_ids.each do |user_id|
-    locations_from_db = get_following_locations(user_id)
-    location_ids_from_db = locations_from_db.map do |loc|
-      loc[:id]
+    location_ids_from_db = []
+    aq.get_following_locations(user_id)
+    locations_from_db = aq.following_locations
+    locations_from_db.each do |loc|
+      location_ids_from_db.push(loc[:id])
+    end
+    if (!follows_in_mem.has_key?(user_id))
+      follows_in_mem[user_id] = []
     end
     if (!location_ids_from_db.eql?(follows_in_mem[user_id]))
       print "get_following_locations failed for user id: " + user_id.to_s + "\n"
@@ -201,21 +198,24 @@ task :test_controller => :environment do
   print "get_following_locations passed!\n"
 
   ### test get_posts_for_location ###
+  # compare arrays of :text
   
   location_ids.each do |loc_id|
-    posts_from_db = aq.get_posts_for_location(loc_id)
-    post_ids_from_db = posts_from_db.map do |post|
-      post[:id]
+    aq.get_posts_for_location(loc_id)
+    post_texts_from_db = []
+    aq.posts.each do |post|
+      post_texts_from_db.push(post[:text])
     end
 
-    post_ids_from_mem = posts_by_location.map do |post|
-      post[:id]
+    post_texts_from_mem = []
+    posts_by_location[loc_id].each do |post|
+      post_texts_from_mem.push(post[:text])
     end
 
-    if (!post_ids_from_db.eql?(post_ids_from_mem))
+    if (!post_texts_from_db.eql?(post_texts_from_mem))
       print "get_posts_for_location failed for location id: " + loc_id.to_s + "\n"
-      print "location had: " + post_ids_from_mem + "\n"
-      print "db said location_had: " + post_ids_from_db.to_s + "\n"
+      print "location had: " + post_texts_from_mem.to_s + "\n"
+      print "db said location_had: " + post_texts_from_db.to_s + "\n"
       exit 0
     end
   end

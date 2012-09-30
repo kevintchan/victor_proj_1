@@ -6,7 +6,6 @@ class Post < ActiveRecord::Base
 
   ### Validations
   validates :text, :presence => true, :length => {:maximum => 200}
-  validates_associated :user
   validates_associated :location
 
 end
