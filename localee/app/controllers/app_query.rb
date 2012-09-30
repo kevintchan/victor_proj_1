@@ -374,8 +374,15 @@ class AppQuery
   # The resulting columns names must include (but are not limited to):
   #   * name - name of the user
   #   * num_posts - number of posts the user has created
+  #vzhu: added a U.id select since names are not keys (people may share names)
+  #For each U.id, get the number of rows (each row corresponds to a post by that user).
   def top_users_posts_sql
-    "SELECT '' AS name, 0 AS num_posts FROM users WHERE 1=2"
+    "SELECT U.id AS id, U.name AS name, COUNT(*) AS num_posts
+    FROM user U, posts P
+    WHERE U.id = P.id
+    GROUP BY U.id
+    ORDER BY COUNT(*) DESC
+    LIMIT 5"
   end
 
   # Retrieve the top 5 locations with the most unique posters. Only retrieve locations with at least 2 unique posters.
@@ -385,7 +392,13 @@ class AppQuery
   #   * name - name of the location
   #   * num_users - number of unique users who have posted to the location
   def top_locations_unique_users_sql
-    "SELECT '' AS name, 0 AS num_users FROM users WHERE 1=2"
+    "SELECT L.id AS id, L.name AS name, COUNT(DISTINCT U.id) AS num_users
+    FROM locations L, posts P, users U
+    WHERE L.id = P.location_id, P.user_id = U.id
+    GROUP BY L.id
+    ORDER BY COUNT(DISTINCT U.id) DESC
+    HAVING COUNT(DISTINCT U.id) > 1
+    LIMIT 5"
   end
 
   # Retrieve the top 5 users who follow the most locations, where each location has at least 2 posts
@@ -394,8 +407,20 @@ class AppQuery
   # The resulting columns names must include (but are not limited to):
   #   * name - name of the user
   #   * num_locations - number of locations (has at least 2 posts) the user follows
+  #vzhu: Not sure if this is right...oh well!
   def top_users_locations_sql
-    "SELECT '' AS name, 0 AS num_locations FROM users WHERE 1=2"
+    "SELECT U.id AS id, U.name AS name, COUNT(*) AS num_locations
+    FROM users U, follows F, locations L
+    WHERE U.id = F.user_id
+    AND L.id = F.location_id
+    AND L.id IN (SELECT L2.id
+    	     	FROM L2 locations, P posts
+		WHERE L2.id = P.location_id
+		GROUP BY L2.id
+		HAVING COUNT(*) > 1)
+    GROUP BY U.id
+    ORDER BY COUNT(*) DESC
+    LIMIT 5"
   end
 
 end
