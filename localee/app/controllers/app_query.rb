@@ -88,7 +88,7 @@ class AppQuery
     post_query = "SELECT P.user_id AS author_id,
                          U.name AS author,
                          P.text AS text,
-                         P.created_at AS create_at
+                         P.created_at AS created_at
                   FROM posts P, users U
                   WHERE P.user_id = U.id AND P.location_id = #{location_id}"
     results = ActiveRecord::Base.connection.execute(post_query)
@@ -128,7 +128,7 @@ class AppQuery
 
     @following_locations.each do |location|
       get_posts_for_location(location[:id])
-      final_posts.merge(@posts)
+      final_posts = final_posts | @posts
     end
 
     @posts = final_posts
