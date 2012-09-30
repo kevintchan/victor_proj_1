@@ -6,13 +6,13 @@ task :test_controller => :environment do
 
   aq.get_all_users
   if (!aq.users.empty?)
-    print "please empty users table first"
+    print "please empty users table first\n"
     exit 0
   end
 
   aq.get_all_locations
   if (!aq.locations.empty?)
-    print "please empty locations table first"
+    print "please empty locations table first\n"
     exit 0
   end
 
@@ -41,11 +41,13 @@ task :test_controller => :environment do
       exit 0
     end
 
-    users_in_mem[aq.user[:id]] =(aq.user)
+    users_in_mem[aq.user[:id]]=(aq.user)
   end
 
+  print users_in_mem
+
   # locations we create, id => locationhash
-  created_locations = {}
+  locations_in_mem = {}
 
   # create locations
   (1..num_locations).each do |i|
@@ -70,6 +72,8 @@ task :test_controller => :environment do
     print "get_all_users found: " + aq.users.to_s
     exit 0
   end
+
+  print aq.users
 
   user_ids = []
   aq.users.each do |user_from_db|
@@ -142,7 +146,7 @@ task :test_controller => :environment do
       if (!aq.create_post(u, post_hash))
         print "create_post failed for arguments:\n"
         print "user_id: " + u.to_s + "\n"
-        print "post hash: " post_hash.to_s + "\n"
+        print "post hash: " + post_hash.to_s + "\n"
         exit 0
       end
         
