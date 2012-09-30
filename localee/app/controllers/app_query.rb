@@ -161,6 +161,7 @@ class AppQuery
   def create_location(location_hash={})
     new_loc = Location.new(location_hash)
     save_successful = new_loc.save
+    @location = new_loc
     return save_successful
   end
 
@@ -211,6 +212,7 @@ class AppQuery
                         :location_id=>post_hash[:location_id],
                         :text=>post_hash[:text])
     save_successful = new_post.save
+    @post = new_post
     return save_successful
   end
 
