@@ -278,6 +278,7 @@ class AppQuery
     all_users_query = "SELECT U.id as id, U.name as name, U.email as email
                        FROM users U"
     @users = ActiveRecord::Base.connection.execute(all_users_query)
+    return @users
   end
 
   # Purpose: Get all the locations
@@ -298,12 +299,11 @@ class AppQuery
     @locations = []
 
     result.each do |row|
-      @locations.push({ :id => row[0],
-                        :name => row[1],
-                        :latitude => row[2],
-                        :longitude => row[3]})
+      @locations.push({ :id => row["id"],
+                        :name => row["name"],
+                        :latitude => row["latitude"],
+                        :longitude => row["longitude"]})
     end
-    return @locations
 
   end
 
