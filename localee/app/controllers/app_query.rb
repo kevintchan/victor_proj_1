@@ -376,7 +376,7 @@ class AppQuery
   #   * num_posts - number of posts the user has created
   #vzhu:For each U.id, get the number of rows (each row corresponds to a post by that user).
   def top_users_posts_sql
-    "SELECT U.name AS name, COUNT(*) AS num_posts
+    "SELECT U.id AS id, U.name AS name, COUNT(*) AS num_posts
     FROM user U, posts P
     WHERE U.id = P.id
     GROUP BY U.id
@@ -391,7 +391,7 @@ class AppQuery
   #   * name - name of the location
   #   * num_users - number of unique users who have posted to the location
   def top_locations_unique_users_sql
-    "SELECT L.name AS name, COUNT(DISTINCT U.id) AS num_users
+    "SELECT L.id AS id, L.name AS name, COUNT(DISTINCT U.id) AS num_users
     FROM locations L, posts P, users U
     WHERE L.id = P.location_id, P.user_id = U.id
     GROUP BY L.id
@@ -408,7 +408,7 @@ class AppQuery
   #   * num_locations - number of locations (has at least 2 posts) the user follows
   #vzhu: Not sure if this is right...oh well!
   def top_users_locations_sql
-    "SELECT U.name AS name, COUNT(*) AS num_locations
+    "SELECT U.id AS id, U.name AS name, COUNT(*) AS num_locations
     FROM users U, follows F, locations L
     WHERE U.id = F.user_id
     AND L.id = F.location_id
