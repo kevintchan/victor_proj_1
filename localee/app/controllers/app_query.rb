@@ -90,7 +90,8 @@ class AppQuery
                          P.text AS text,
                          P.created_at AS created_at
                   FROM posts P, users U
-                  WHERE P.user_id = U.id AND P.location_id = #{location_id}"
+                  WHERE P.user_id = U.id AND P.location_id = #{location_id}
+                  ORDER BY P.created_at DESC"
     results = ActiveRecord::Base.connection.execute(post_query)
     @posts = []
 
@@ -132,6 +133,8 @@ class AppQuery
     end
 
     @posts = final_posts
+
+    @posts.sort! {|a, b| b[:created_at] <=> a[:created_at]}
   end
 
   # Purpose: Retrieve the locations within a GPS bounding box
@@ -158,9 +161,8 @@ class AppQuery
                          L.latitude AS latitude,
                          L.longitude AS longitude
                   FROM locations L
-                  WHERE F.location_id = L.id,
-                        L.latitude < nelast AND L.latitude > swlat AND
-                        L.longitude < nelng AND L.longitude > swlng"
+                  WHERE L.latitude < #{nelat} AND L.latitude > #{swlat} AND
+                        L.longitude < #{nelng} AND L.longitude > #{swlng}"
     results = ActiveRecord::Base.connection.execute(near_query)
 
     @locations = []
@@ -170,7 +172,7 @@ class AppQuery
                        WHERE F.location_id = #{row["id"]} AND
                              F.user_id = #{user_id}"
       follows_res = ActiveRecord::Base.connection.execute(follows_query)
-      @loations.push({
+      @locations.push({
                        :id => row["id"],
                        :name => row["name"],
                        :latitude => row["latitude"],
@@ -221,10 +223,11 @@ class AppQuery
   #       we may call it multiple times to test your schema/models.
   #       Your schema/models/code should prevent corruption of the database.
   def unfollow_location(user_id, location_id)
-    unfollow_query = "DELETE FROM follows F
-                      WHERE F.user_id = #{user_id} AND
-                      F.location_id = #{location_id}"
-    ActionRecord::Base.connection.execute(unfollow_query)
+    unfollow_query = "DELETE
+                      FROM follows
+                      WHERE follows.user_id = #{user_id} AND
+                      follows.location_id = #{location_id}"
+    ActiveRecord::Base.connection.execute(unfollow_query)
   end
 
   # Purpose: The current user creates a post to a given location
@@ -376,12 +379,13 @@ class AppQuery
   #   * num_posts - number of posts the user has created
   #vzhu:For each U.id, get the number of rows (each row corresponds to a post by that user).
   def top_users_posts_sql
-    "SELECT U.id AS id, U.name AS name, COUNT(*) AS num_posts
-    FROM user U, posts P
-    WHERE U.id = P.id
-    GROUP BY U.id
-    ORDER BY COUNT(*) DESC
-    LIMIT 5"
+    return "SELECT U.name AS name,
+                   COUNT(*) AS num_posts
+            FROM users U, posts P
+            WHERE U.id = P.user_id
+            GROUP BY U.id
+            ORDER BY COUNT(*) DESC
+            LIMIT 5"
   end
 
   # Retrieve the top 5 locations with the most unique posters. Only retrieve locations with at least 2 unique posters.
@@ -391,13 +395,15 @@ class AppQuery
   #   * name - name of the location
   #   * num_users - number of unique users who have posted to the location
   def top_locations_unique_users_sql
-    "SELECT L.id AS id, L.name AS name, COUNT(DISTINCT U.id) AS num_users
-    FROM locations L, posts P, users U
-    WHERE L.id = P.location_id, P.user_id = U.id
-    GROUP BY L.id
-    ORDER BY COUNT(DISTINCT U.id) DESC
-    HAVING COUNT(DISTINCT U.id) > 1
-    LIMIT 5"
+    return "SELECT L.id AS id,
+                   L.name AS name,
+                   COUNT(DISTINCT U.id) AS num_users
+            FROM locations L, posts P, users U
+            WHERE L.id = P.location_id AND P.user_id = U.id
+            GROUP BY L.id
+            HAVING num_users > 1
+            ORDER BY num_users DESC
+            LIMIT 5"
   end
 
   # Retrieve the top 5 users who follow the most locations, where each location has at least 2 posts
@@ -408,18 +414,18 @@ class AppQuery
   #   * num_locations - number of locations (has at least 2 posts) the user follows
   #vzhu: Not sure if this is right...oh well!
   def top_users_locations_sql
-    "SELECT U.id AS id, U.name AS name, COUNT(*) AS num_locations
-    FROM users U, follows F, locations L
-    WHERE U.id = F.user_id
-    AND L.id = F.location_id
-    AND L.id IN (SELECT L2.id
-    	     	FROM L2 locations, P posts
-		WHERE L2.id = P.location_id
-		GROUP BY L2.id
-		HAVING COUNT(*) > 1)
-    GROUP BY U.id
-    ORDER BY COUNT(*) DESC
-    LIMIT 5"
+    return "SELECT U.name AS name, COUNT(*) AS num_locations
+            FROM users U, follows F, locations L
+            WHERE U.id = F.user_id AND
+                  L.id = F.location_id AND
+                  L.id IN (SELECT L2.id
+                           FROM locations L2, posts P
+                           WHERE L2.id = P.location_id
+                           GROUP BY L2.id
+                           HAVING COUNT(*) > 1)
+            GROUP BY U.id
+            ORDER BY COUNT(*) DESC
+            LIMIT 5"
   end
 
 end
