@@ -155,6 +155,7 @@ class AppQuery
   #     * :longitude - the longitude
   #     * :follows - true if the current user follows this location. false otherwise.
   # Output: None
+  #vzhu: Added order by and limit
   def get_nearby_locations(nelat, nelng, swlat, swlng, user_id)
     near_query = "SELECT L.id AS id,
                          L.name AS name,
@@ -162,7 +163,9 @@ class AppQuery
                          L.longitude AS longitude
                   FROM locations L
                   WHERE L.latitude < #{nelat} AND L.latitude > #{swlat} AND
-                        L.longitude < #{nelng} AND L.longitude > #{swlng}"
+                        L.longitude < #{nelng} AND L.longitude > #{swlng}
+		  ORDER BY L.latitude ASC
+		  LIMIT 50"
     results = ActiveRecord::Base.connection.execute(near_query)
 
     @locations = []
